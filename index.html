@@ -23,54 +23,45 @@
 </head>
 <body class="text-white flex flex-col items-center justify-center min-h-screen p-4">
 
-    <div class="w-full max-w-6xl mx-auto">
-        <h1 class="text-3xl font-bold text-center mb-2 text-yellow-200">Cricket Ball Trajectory</h1>
-        <p class="text-center text-gray-300 mb-6">A bowler's perspective. Adjust speed, swing, spin, and bowling angle.</p>
+    <div class="w-full max-w-6xl mx-auto flex flex-col gap-6">
+        <h1 class="text-3xl font-bold text-center text-yellow-200">Cricket Ball Trajectory</h1>
+        <p class="text-center text-gray-300 -mt-4">A bowler's perspective. Adjust speed, swing, spin, and bowling angle.</p>
         
-        <div class="flex flex-col md:flex-row gap-6">
-            <!-- Canvas for the animation -->
-            <div class="flex-grow aspect-[16/7] bg-black rounded-xl shadow-2xl border-2 border-gray-600 overflow-hidden">
-                <canvas id="trajectoryCanvas"></canvas>
+        <!-- Canvas for the animation -->
+        <div class="w-full aspect-[16/7] bg-black rounded-xl shadow-2xl border-2 border-gray-600 overflow-hidden">
+            <canvas id="trajectoryCanvas"></canvas>
+        </div>
+
+        <!-- Combined Panel for controls and metrics -->
+        <div class="w-full control-panel p-4 rounded-xl border border-gray-700 flex flex-col md:flex-row md:items-center gap-4">
+            <div class="flex-grow grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-2 text-sm text-gray-300">
+                <div class="flex justify-between items-center">
+                    <span class="font-bold">Speed (KPH):</span>
+                    <span id="speedLabel" class="font-mono bg-cyan-100 text-cyan-800 px-2 py-1 rounded">120</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="font-bold">Swing Force:</span>
+                    <span id="swingLabel" class="font-mono bg-purple-100 text-purple-800 px-2 py-1 rounded">0.000</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="font-bold">Spin Force:</span>
+                    <span id="spinLabel" class="font-mono bg-orange-100 text-orange-800 px-2 py-1 rounded">0.00</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="font-bold">Final Deviation:</span>
+                    <span id="deviationLabel" class="font-mono bg-pink-100 text-pink-800 px-2 py-1 rounded">0 px</span>
+                </div>
             </div>
 
-            <!-- Side Panel for controls and metrics -->
-            <div class="w-full md:w-80 flex-shrink-0 control-panel p-4 rounded-xl border border-gray-700 flex flex-col gap-4">
-                <h2 class="text-lg font-bold text-yellow-200 border-b border-gray-600 pb-2">Delivery Metrics</h2>
-                <div class="text-sm text-gray-300 space-y-2">
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold">Speed (KPH):</span>
-                        <span id="speedLabel" class="font-mono bg-cyan-100 text-cyan-800 px-2 py-1 rounded">120</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold">Swing Force:</span>
-                        <span id="swingLabel" class="font-mono bg-purple-100 text-purple-800 px-2 py-1 rounded">0.000</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold">Spin Force:</span>
-                        <span id="spinLabel" class="font-mono bg-orange-100 text-orange-800 px-2 py-1 rounded">0.00</span>
-                    </div>
-                    <div class="flex justify-between items-center">
-                        <span class="font-bold">Final Deviation:</span>
-                        <span id="deviationLabel" class="font-mono bg-pink-100 text-pink-800 px-2 py-1 rounded">0 px</span>
-                    </div>
-                </div>
-
-                <div class="flex-grow"></div> <!-- Spacer -->
-
-                 <div class="grid grid-cols-2 gap-2">
-                    <button id="stanceButton" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-3 rounded-lg transition-colors text-sm">Stance: RHB</button>
-                    <button id="approachButton" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-3 rounded-lg transition-colors text-sm">Over Wicket</button>
-                </div>
-                
-                <button id="resetButton" class="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded-lg transition-colors">
-                    Re-bowl
-                </button>
+            <div class="flex-shrink-0 grid grid-cols-3 gap-2">
+                <button id="stanceButton" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-3 rounded-lg transition-colors text-sm">Stance: RHB</button>
+                <button id="approachButton" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-3 rounded-lg transition-colors text-sm">Over Wicket</button>
+                <button id="resetButton" class="bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded-lg transition-colors">Re-bowl</button>
             </div>
         </div>
 
-
         <!-- Sliders -->
-        <div class="mt-6 p-6 bg-gray-800 rounded-xl border border-gray-700 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="p-6 bg-gray-800 rounded-xl border border-gray-700 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
                 <label for="speedSlider" class="block mb-2 font-medium text-gray-300">Speed</label>
                 <input id="speedSlider" type="range" min="4" max="12" value="8" step="0.1" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-400">
@@ -111,6 +102,7 @@
         // State variables
         let isRHB = true;
         let bowlingApproach = 'over'; // 'over' or 'around'
+        let batState = { swinging: false, angle: 0, maxAngle: Math.PI / 2.5, rotationSpeed: 0.1 };
 
         const proportions = {
             bowlingCreaseX: 0.08,
@@ -173,27 +165,25 @@
             const poppingCreaseX = canvas.width * (1 - proportions.poppingCreaseX);
             const batWidth = 12;
             const batHeight = 60;
-            const handleHeight = 40;
-            const handleWidth = 4;
-
+            
             const yOffset = isRHB ? - (canvas.height * proportions.stumpSpacing * 2.5) : (canvas.height * proportions.stumpSpacing * 2.5);
-            const batCenterY = canvas.height / 2 + yOffset;
+            const pivotX = poppingCreaseX;
+            const pivotY = canvas.height / 2 + yOffset;
 
+            ctx.save();
+            ctx.translate(pivotX, pivotY);
+            ctx.rotate(isRHB ? -batState.angle : batState.angle);
+            
+            // Draw relative to the pivot
             ctx.fillStyle = '#d2b48c'; // Light wood color
             ctx.strokeStyle = '#8b4513'; // Darker wood for outline
             ctx.lineWidth = 2;
-
-            // Blade
             ctx.beginPath();
-            ctx.rect(poppingCreaseX, batCenterY - batHeight / 2, batWidth, batHeight);
+            ctx.rect(0, -batHeight / 2, batWidth, batHeight);
             ctx.fill();
             ctx.stroke();
             
-            // Handle
-            ctx.fillStyle = '#5a3a22';
-            ctx.beginPath();
-            ctx.rect(poppingCreaseX, batCenterY - handleHeight / 2, handleWidth, handleHeight);
-            ctx.fill();
+            ctx.restore();
         }
 
         function resetAnimation() {
@@ -215,6 +205,9 @@
                 preBounceDy: 0,
                 isFinished: false
             };
+
+            batState.swinging = false;
+            batState.angle = 0;
             trajectoryPath = [{x: ball.x - 10, y: ball.y}];
             seamAngle = 0;
             bounceMarker = null;
@@ -284,9 +277,11 @@
                 ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(projectedX, projectedY);
                 ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)'; ctx.lineWidth = 2; ctx.setLineDash([4, 8]); ctx.stroke(); ctx.setLineDash([]);
             }
-            const finalX = trajectoryPath[trajectoryPath.length-1].x; const finalY = trajectoryPath[trajectoryPath.length-1].y;
-            ctx.beginPath(); ctx.moveTo(finalX, finalY); ctx.lineTo(finalX, canvas.height/2);
-            ctx.strokeStyle = 'rgba(236, 72, 153, 0.9)'; ctx.lineWidth = 2; ctx.setLineDash([3, 5]); ctx.stroke(); ctx.setLineDash([]);
+            if (trajectoryPath.length > 1) {
+                const finalX = trajectoryPath[trajectoryPath.length-1].x; const finalY = trajectoryPath[trajectoryPath.length-1].y;
+                ctx.beginPath(); ctx.moveTo(finalX, finalY); ctx.lineTo(finalX, canvas.height/2);
+                ctx.strokeStyle = 'rgba(236, 72, 153, 0.9)'; ctx.lineWidth = 2; ctx.setLineDash([3, 5]); ctx.stroke(); ctx.setLineDash([]);
+            }
             drawBall(ball.x, ball.y, ball.radius);
         }
 
@@ -296,6 +291,12 @@
                 ball.dy += ball.swing; ball.x += ball.dx; ball.y += ball.dy;
                 seamAngle += ball.dx * 0.05;
                 trajectoryPath.push({ x: ball.x, y: ball.y });
+
+                const swingTriggerX = canvas.width * (1 - proportions.poppingCreaseX) - 30;
+                if(ball.x > swingTriggerX && !batState.swinging) {
+                    batState.swinging = true;
+                }
+
                 const bounceX = canvas.width * 0.65;
                 if (ball.x > bounceX && !ball.hasBounced) {
                     ball.preBounceDx = ball.dx; ball.preBounceDy = ball.dy;
@@ -305,6 +306,10 @@
                 if (ball.x > canvas.width * (1 - proportions.bowlingCreaseX) - ball.radius) ball.isFinished = true;
             }
             
+            if (batState.swinging && batState.angle < batState.maxAngle) {
+                batState.angle += batState.rotationSpeed;
+            }
+
             redrawFullScene();
             updateLabels();
             
@@ -320,7 +325,7 @@
         approachButton.addEventListener('click', () => {
             bowlingApproach = bowlingApproach === 'over' ? 'around' : 'over';
             approachButton.textContent = bowlingApproach === 'over' ? 'Over Wicket' : 'Around Wicket';
-             // The change will take effect on the next re-bowl
+             if(ball.isFinished) resetAnimation();
         });
 
         window.addEventListener('resize', resizeCanvas);
