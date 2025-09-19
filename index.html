@@ -49,7 +49,7 @@
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="font-bold">Final Deviation:</span>
-                    <span id="deviationLabel" class="font-mono bg-pink-100 text-pink-800 px-2 py-1 rounded">0 px</span>
+                    <span id="deviationLabel" class="font-mono bg-pink-100 text-pink-800 px-2 py-1 rounded">0.00°</span>
                 </div>
             </div>
 
@@ -210,11 +210,12 @@
                 hasBounced: false,
                 preBounceDx: 0,
                 preBounceDy: 0,
-                isFinished: false
+                isFinished: false,
+                deviationAngle: 0
             };
 
             batState.swinging = false;
-            batState.angle = 0; // Reset swing angle, backlift is constant
+            batState.angle = 0; 
             trajectoryPath = [{x: ball.x - 10, y: ball.y}];
             seamAngle = 0;
             bounceMarker = null;
@@ -226,8 +227,7 @@
             speedLabel.textContent = (parseFloat(speedSlider.value) * 15).toFixed(0); 
             swingLabel.textContent = parseFloat(swingSlider.value).toFixed(3);
             spinLabel.textContent = parseFloat(spinSlider.value).toFixed(2);
-            const deviation = trajectoryPath.length > 0 ? trajectoryPath[trajectoryPath.length - 1].y - canvas.height / 2 : 0;
-            deviationLabel.textContent = `${deviation.toFixed(0)} px`;
+            deviationLabel.textContent = `${ball.deviationAngle.toFixed(2)}°`;
         }
         
         function drawBall(x, y, radius) {
@@ -306,8 +306,18 @@
 
                 const bounceX = canvas.width * 0.65;
                 if (ball.x > bounceX && !ball.hasBounced) {
-                    ball.preBounceDx = ball.dx; ball.preBounceDy = ball.dy;
-                    ball.dy += ball.spin; ball.hasBounced = true;
+                    ball.preBounceDx = ball.dx;
+                    ball.preBounceDy = ball.dy;
+                    
+                    const angleBefore = Math.atan2(ball.preBounceDy, ball.preBounceDx);
+                    
+                    ball.dy += ball.spin; // Apply spin for deviation
+                    
+                    const angleAfter = Math.atan2(ball.dy, ball.dx);
+
+                    ball.deviationAngle = (angleAfter - angleBefore) * (180 / Math.PI);
+
+                    ball.hasBounced = true;
                     bounceMarker = { x: ball.x, y: ball.y };
                 }
                 if (ball.x > canvas.width * (1 - proportions.bowlingCreaseX) - ball.radius) ball.isFinished = true;
