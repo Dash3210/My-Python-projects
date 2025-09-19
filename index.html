@@ -14,50 +14,62 @@
             background-color: #0d2115; /* Dark green background */
         }
         canvas {
-            background-color: #4a6b53; /* Brighter green for the field */
+            background-color: #a3b86c; /* Green from the image */
         }
-        .label-box {
-            background-color: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(5px);
-            border: 1px solid rgba(200, 200, 200, 0.5);
+        .control-panel {
+            background-color: #1f2937; /* A dark gray for the panel */
         }
     </style>
 </head>
 <body class="text-white flex flex-col items-center justify-center min-h-screen p-4">
 
-    <div class="w-full max-w-4xl mx-auto">
+    <div class="w-full max-w-6xl mx-auto">
         <h1 class="text-3xl font-bold text-center mb-2 text-yellow-200">Cricket Ball Trajectory</h1>
-        <p class="text-center text-gray-300 mb-6">A bowler's perspective. Adjust speed, swing, and spin.</p>
-
-        <!-- Canvas for the animation -->
-        <div class="relative w-full aspect-[16/9] bg-gray-800 rounded-xl shadow-2xl border-2 border-gray-600 overflow-hidden">
-            <canvas id="trajectoryCanvas"></canvas>
-            
-            <!-- Labels overlayed on the canvas -->
-            <div class="absolute top-4 left-4 p-3 rounded-lg label-box text-gray-800 text-sm z-10">
-                <div class="flex justify-between items-center w-44 mb-2">
-                    <span class="font-bold">Speed (KPH):</span>
-                    <span id="speedLabel" class="font-mono bg-cyan-100 text-cyan-800 px-2 py-1 rounded">120</span>
-                </div>
-                <div class="flex justify-between items-center w-44 mb-2">
-                    <span class="font-bold">Swing Force:</span>
-                    <span id="swingLabel" class="font-mono bg-purple-100 text-purple-800 px-2 py-1 rounded">0.000</span>
-                </div>
-                <div class="flex justify-between items-center w-44 mb-2">
-                    <span class="font-bold">Spin Force:</span>
-                    <span id="spinLabel" class="font-mono bg-orange-100 text-orange-800 px-2 py-1 rounded">0.00</span>
-                </div>
-                <div class="flex justify-between items-center w-44">
-                    <span class="font-bold">Final Deviation:</span>
-                    <span id="deviationLabel" class="font-mono bg-pink-100 text-pink-800 px-2 py-1 rounded">0 px</span>
-                </div>
+        <p class="text-center text-gray-300 mb-6">A bowler's perspective. Adjust speed, swing, spin, and bowling angle.</p>
+        
+        <div class="flex flex-col md:flex-row gap-6">
+            <!-- Canvas for the animation -->
+            <div class="flex-grow aspect-[16/7] bg-black rounded-xl shadow-2xl border-2 border-gray-600 overflow-hidden">
+                <canvas id="trajectoryCanvas"></canvas>
             </div>
-            <button id="resetButton" class="absolute top-4 right-4 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-200 z-10">
-                Re-bowl
-            </button>
+
+            <!-- Side Panel for controls and metrics -->
+            <div class="w-full md:w-80 flex-shrink-0 control-panel p-4 rounded-xl border border-gray-700 flex flex-col gap-4">
+                <h2 class="text-lg font-bold text-yellow-200 border-b border-gray-600 pb-2">Delivery Metrics</h2>
+                <div class="text-sm text-gray-300 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold">Speed (KPH):</span>
+                        <span id="speedLabel" class="font-mono bg-cyan-100 text-cyan-800 px-2 py-1 rounded">120</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold">Swing Force:</span>
+                        <span id="swingLabel" class="font-mono bg-purple-100 text-purple-800 px-2 py-1 rounded">0.000</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold">Spin Force:</span>
+                        <span id="spinLabel" class="font-mono bg-orange-100 text-orange-800 px-2 py-1 rounded">0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold">Final Deviation:</span>
+                        <span id="deviationLabel" class="font-mono bg-pink-100 text-pink-800 px-2 py-1 rounded">0 px</span>
+                    </div>
+                </div>
+
+                <div class="flex-grow"></div> <!-- Spacer -->
+
+                 <div class="grid grid-cols-2 gap-2">
+                    <button id="stanceButton" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-3 rounded-lg transition-colors text-sm">Stance: RHB</button>
+                    <button id="approachButton" class="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-3 rounded-lg transition-colors text-sm">Over Wicket</button>
+                </div>
+                
+                <button id="resetButton" class="w-full bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-2 px-4 rounded-lg transition-colors">
+                    Re-bowl
+                </button>
+            </div>
         </div>
 
-        <!-- Controls -->
+
+        <!-- Sliders -->
         <div class="mt-6 p-6 bg-gray-800 rounded-xl border border-gray-700 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
                 <label for="speedSlider" class="block mb-2 font-medium text-gray-300">Speed</label>
@@ -78,7 +90,6 @@
         const canvas = document.getElementById('trajectoryCanvas');
         const ctx = canvas.getContext('2d');
 
-        // UI Elements
         const speedSlider = document.getElementById('speedSlider');
         const swingSlider = document.getElementById('swingSlider');
         const spinSlider = document.getElementById('spinSlider');
@@ -87,13 +98,28 @@
         const spinLabel = document.getElementById('spinLabel');
         const deviationLabel = document.getElementById('deviationLabel');
         const resetButton = document.getElementById('resetButton');
+        const stanceButton = document.getElementById('stanceButton');
+        const approachButton = document.getElementById('approachButton');
 
-        let parentContainer = canvas.parentElement;
+        let parentContainer = document.querySelector('.aspect-\\[16\\/7\\]');
         let ball = {};
         let trajectoryPath = [];
         let seamAngle = 0;
         let bounceMarker = null;
         let animationFrameId;
+        
+        // State variables
+        let isRHB = true;
+        let bowlingApproach = 'over'; // 'over' or 'around'
+
+        const proportions = {
+            bowlingCreaseX: 0.08,
+            poppingCreaseX: 0.15,
+            returnCreaseTopY: 0.2,
+            returnCreaseBottomY: 0.8,
+            stumpSpacing: 0.03,
+            bowlingOffset: 0.1 // % of canvas height
+        };
 
         function resizeCanvas() {
             canvas.width = parentContainer.clientWidth;
@@ -101,231 +127,210 @@
             resetAnimation();
         }
 
+        function drawScene() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPitch();
+            drawBat();
+        }
+
         function drawPitch() {
-            const pitchHeight = canvas.height * 0.3;
-            const pitchY = (canvas.height - pitchHeight) / 2;
+            const bowlingCreaseLeftX = canvas.width * proportions.bowlingCreaseX;
+            const poppingCreaseLeftX = canvas.width * proportions.poppingCreaseX;
+            const bowlingCreaseRightX = canvas.width * (1 - proportions.bowlingCreaseX);
+            const poppingCreaseRightX = canvas.width * (1 - proportions.poppingCreaseX);
+            const returnCreaseTopY = canvas.height * proportions.returnCreaseTopY;
+            const returnCreaseBottomY = canvas.height * proportions.returnCreaseBottomY;
 
-            // Pitch
-            ctx.fillStyle = '#b9936c';
-            ctx.fillRect(0, pitchY, canvas.width, pitchHeight);
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 2;
+
+            ctx.beginPath();
+            ctx.moveTo(bowlingCreaseLeftX, returnCreaseTopY); ctx.lineTo(poppingCreaseLeftX, returnCreaseTopY);
+            ctx.moveTo(bowlingCreaseLeftX, returnCreaseBottomY); ctx.lineTo(poppingCreaseLeftX, returnCreaseBottomY);
+            ctx.moveTo(poppingCreaseLeftX, returnCreaseTopY); ctx.lineTo(poppingCreaseLeftX, returnCreaseBottomY);
+            ctx.stroke();
             
-            // Creases
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            const creaseWidth = 5;
-            // Bowler's crease
-            ctx.fillRect(canvas.width * 0.1, 0, creaseWidth, canvas.height);
-            // Batsman's crease
-            ctx.fillRect(canvas.width * 0.9 - creaseWidth, 0, creaseWidth, canvas.height);
+            ctx.beginPath();
+            ctx.moveTo(bowlingCreaseRightX, returnCreaseTopY); ctx.lineTo(poppingCreaseRightX, returnCreaseTopY);
+            ctx.moveTo(bowlingCreaseRightX, returnCreaseBottomY); ctx.lineTo(poppingCreaseRightX, returnCreaseBottomY);
+            ctx.moveTo(poppingCreaseRightX, returnCreaseTopY); ctx.lineTo(poppingCreaseRightX, returnCreaseBottomY);
+            ctx.stroke();
 
-            // Stumps
-            const stumpHeight = 25;
-            const stumpWidth = 4;
-            const stumpX = canvas.width * 0.9 - stumpHeight;
-            const stumpSpacing = 8;
             ctx.fillStyle = '#f0e68c';
-            // Stumps are vertical, so we swap width/height for fillRect
-            ctx.fillRect(stumpX, canvas.height/2 - stumpSpacing - stumpWidth, stumpHeight, stumpWidth);
-            ctx.fillRect(stumpX, canvas.height/2 - stumpWidth/2, stumpHeight, stumpWidth);
-            ctx.fillRect(stumpX, canvas.height/2 + stumpSpacing, stumpHeight, stumpWidth);
+            const stumpRadius = 4;
+            const stumpSpacing = canvas.height * proportions.stumpSpacing;
+            
+            ctx.beginPath(); ctx.arc(bowlingCreaseLeftX, canvas.height/2-stumpSpacing, stumpRadius, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(bowlingCreaseLeftX, canvas.height/2, stumpRadius, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(bowlingCreaseLeftX, canvas.height/2+stumpSpacing, stumpRadius, 0, Math.PI * 2); ctx.fill();
+            
+            ctx.beginPath(); ctx.arc(bowlingCreaseRightX, canvas.height/2-stumpSpacing, stumpRadius, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(bowlingCreaseRightX, canvas.height/2, stumpRadius, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(bowlingCreaseRightX, canvas.height/2+stumpSpacing, stumpRadius, 0, Math.PI * 2); ctx.fill();
+        }
+
+        function drawBat() {
+            const poppingCreaseX = canvas.width * (1 - proportions.poppingCreaseX);
+            const batWidth = 12;
+            const batHeight = 60;
+            const handleHeight = 40;
+            const handleWidth = 4;
+
+            const yOffset = isRHB ? - (canvas.height * proportions.stumpSpacing * 2.5) : (canvas.height * proportions.stumpSpacing * 2.5);
+            const batCenterY = canvas.height / 2 + yOffset;
+
+            ctx.fillStyle = '#d2b48c'; // Light wood color
+            ctx.strokeStyle = '#8b4513'; // Darker wood for outline
+            ctx.lineWidth = 2;
+
+            // Blade
+            ctx.beginPath();
+            ctx.rect(poppingCreaseX, batCenterY - batHeight / 2, batWidth, batHeight);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Handle
+            ctx.fillStyle = '#5a3a22';
+            ctx.beginPath();
+            ctx.rect(poppingCreaseX, batCenterY - handleHeight / 2, handleWidth, handleHeight);
+            ctx.fill();
         }
 
         function resetAnimation() {
-            if (animationFrameId) {
-                cancelAnimationFrame(animationFrameId);
-            }
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
+            
+            let startYOffset = canvas.height * proportions.bowlingOffset;
+            let startY = bowlingApproach === 'over' ? canvas.height / 2 - startYOffset : canvas.height / 2 + startYOffset;
+
             ball = {
-                x: canvas.width * 0.1 + 15,
-                y: canvas.height / 2,
+                x: canvas.width * proportions.poppingCreaseX + 15,
+                y: startY,
                 radius: 8,
-                dx: parseFloat(speedSlider.value), // Main velocity is now on X-axis
-                dy: 0, // Sideways velocity
+                dx: parseFloat(speedSlider.value),
+                dy: 0,
                 swing: parseFloat(swingSlider.value),
                 spin: parseFloat(spinSlider.value),
                 hasBounced: false,
-                preBounceDx: 0, // To store velocity before spin
-                preBounceDy: 0, // To store velocity before spin
+                preBounceDx: 0,
+                preBounceDy: 0,
                 isFinished: false
             };
-            trajectoryPath = [{x: ball.x - 10, y: ball.y}]; // Start path just behind ball
+            trajectoryPath = [{x: ball.x - 10, y: ball.y}];
             seamAngle = 0;
             bounceMarker = null;
             updateLabels();
-            animate(); // Start animation
+            animate();
         }
 
         function updateLabels() {
             speedLabel.textContent = (parseFloat(speedSlider.value) * 15).toFixed(0); 
             swingLabel.textContent = parseFloat(swingSlider.value).toFixed(3);
             spinLabel.textContent = parseFloat(spinSlider.value).toFixed(2);
-            // Deviation is now on the Y axis
-            const deviation = trajectoryPath[trajectoryPath.length - 1].y - canvas.height / 2;
+            const deviation = trajectoryPath.length > 0 ? trajectoryPath[trajectoryPath.length - 1].y - canvas.height / 2 : 0;
             deviationLabel.textContent = `${deviation.toFixed(0)} px`;
         }
         
         function drawBall(x, y, radius) {
-            ctx.beginPath();
-            ctx.arc(x, y, radius, 0, Math.PI * 2);
+            ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2);
             ctx.fillStyle = '#b30000';
-            ctx.shadowColor = 'rgba(0,0,0,0.4)';
-            ctx.shadowBlur = 8;
-            ctx.shadowOffsetX = 3;
-            ctx.shadowOffsetY = 4;
+            ctx.shadowColor = 'rgba(0,0,0,0.4)'; ctx.shadowBlur = 8; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 4;
             ctx.fill();
             ctx.shadowBlur = 0; ctx.shadowOffsetX = 0; ctx.shadowOffsetY = 0;
-
             ctx.save();
-            ctx.translate(x, y);
-            ctx.rotate(seamAngle);
-            ctx.beginPath();
-            ctx.arc(0, 0, radius, -Math.PI / 2.5, Math.PI / 2.5);
-            ctx.strokeStyle = '#fff5e1';
-            ctx.lineWidth = 2;
+            ctx.translate(x, y); ctx.rotate(seamAngle);
+            ctx.beginPath(); ctx.arc(0, 0, radius, -Math.PI / 2.5, Math.PI / 2.5);
+            ctx.strokeStyle = '#fff5e1'; ctx.lineWidth = 2;
             ctx.stroke();
             ctx.restore();
         }
 
         function drawSwingArrow() {
-            const startX = canvas.width * 0.1;
-            const startY = canvas.height / 2;
+            const startX = canvas.width * proportions.poppingCreaseX;
+            let startYOffset = canvas.height * proportions.bowlingOffset;
+            const startY = bowlingApproach === 'over' ? canvas.height / 2 - startYOffset : canvas.height / 2 + startYOffset;
             const swing = parseFloat(swingSlider.value);
             if (Math.abs(swing) < 0.001) return;
 
-            ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            const controlX = startX + 50;
-            const controlY = startY + swing * 1000;
-            const endX = startX + 100;
-            const endY = startY + swing * 2000;
+            ctx.beginPath(); ctx.moveTo(startX, startY);
+            const controlX = startX + 50, controlY = startY + swing * 1000;
+            const endX = startX + 100, endY = startY + swing * 2000;
             ctx.quadraticCurveTo(controlX, controlY, endX, endY);
-            ctx.strokeStyle = "rgba(168, 85, 247, 0.7)";
-            ctx.lineWidth = 2;
+            ctx.strokeStyle = "rgba(168, 85, 247, 0.7)"; ctx.lineWidth = 2;
             ctx.stroke();
-
-            // Arrowhead
             const angle = Math.atan2(endY - controlY, endX - controlX);
-            ctx.save();
-            ctx.translate(endX, endY);
-            ctx.rotate(angle);
-            ctx.beginPath();
-            ctx.moveTo(0, 0);
-            ctx.lineTo(-10, -5);
-            ctx.lineTo(-10, 5);
-            ctx.closePath();
-            ctx.fillStyle = "rgba(168, 85, 247, 0.7)";
-            ctx.fill();
+            ctx.save(); ctx.translate(endX, endY); ctx.rotate(angle);
+            ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-10, -5); ctx.lineTo(-10, 5); ctx.closePath();
+            ctx.fillStyle = "rgba(168, 85, 247, 0.7)"; ctx.fill();
             ctx.restore();
+        }
+        
+        function redrawFullScene() {
+            drawScene();
+            drawSwingArrow();
+            if (bounceMarker) {
+                 ctx.beginPath(); ctx.arc(bounceMarker.x, bounceMarker.y, 5, 0, Math.PI * 2); ctx.fillStyle = 'rgba(0,0,0,0.2)'; ctx.fill();
+            }
+            if (trajectoryPath.length > 1) {
+                ctx.beginPath(); ctx.moveTo(trajectoryPath[0].x, trajectoryPath[0].y);
+                for (let i = 1; i < trajectoryPath.length; i++) ctx.lineTo(trajectoryPath[i].x, trajectoryPath[i].y);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)'; ctx.lineWidth = 3; ctx.stroke();
+            }
+            if (ball.isFinished && bounceMarker) {
+                const startX = bounceMarker.x, startY = bounceMarker.y;
+                const preBounceSpeed = Math.sqrt(ball.preBounceDx * ball.preBounceDx + ball.preBounceDy * ball.preBounceDy);
+                const dirX = ball.preBounceDx / preBounceSpeed; const dirY = ball.preBounceDy / preBounceSpeed;
+                const projectionLength = canvas.width * 0.4;
+                const projectedX = startX + dirX * projectionLength; const projectedY = startY + dirY * projectionLength;
+                ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(projectedX, projectedY);
+                ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)'; ctx.lineWidth = 2; ctx.setLineDash([4, 8]); ctx.stroke(); ctx.setLineDash([]);
+            }
+            const finalX = trajectoryPath[trajectoryPath.length-1].x; const finalY = trajectoryPath[trajectoryPath.length-1].y;
+            ctx.beginPath(); ctx.moveTo(finalX, finalY); ctx.lineTo(finalX, canvas.height/2);
+            ctx.strokeStyle = 'rgba(236, 72, 153, 0.9)'; ctx.lineWidth = 2; ctx.setLineDash([3, 5]); ctx.stroke(); ctx.setLineDash([]);
+            drawBall(ball.x, ball.y, ball.radius);
         }
 
         function animate() {
-            // Update state
             if (!ball.isFinished) {
-                ball.dx = parseFloat(speedSlider.value);
-                ball.swing = parseFloat(swingSlider.value);
-                ball.spin = parseFloat(spinSlider.value);
-                
-                ball.dy += ball.swing; // Apply swing force to Y-axis velocity
-                ball.x += ball.dx; // Move ball forward on X-axis
-                ball.y += ball.dy;
+                ball.dx = parseFloat(speedSlider.value); ball.swing = parseFloat(swingSlider.value); ball.spin = parseFloat(spinSlider.value);
+                ball.dy += ball.swing; ball.x += ball.dx; ball.y += ball.dy;
                 seamAngle += ball.dx * 0.05;
-
                 trajectoryPath.push({ x: ball.x, y: ball.y });
-
-                // Bounce logic on X-axis
-                const bounceX = canvas.width * 0.6;
+                const bounceX = canvas.width * 0.65;
                 if (ball.x > bounceX && !ball.hasBounced) {
-                    ball.preBounceDx = ball.dx; // Store pre-bounce velocity
-                    ball.preBounceDy = ball.dy; // Store pre-bounce velocity
-                    ball.dy += ball.spin; // Apply spin force on bounce
-                    ball.hasBounced = true;
+                    ball.preBounceDx = ball.dx; ball.preBounceDy = ball.dy;
+                    ball.dy += ball.spin; ball.hasBounced = true;
                     bounceMarker = { x: ball.x, y: ball.y };
                 }
-
-                // Stop condition on X-axis
-                if (ball.x > canvas.width * 0.9 - ball.radius) {
-                    ball.isFinished = true;
-                }
+                if (ball.x > canvas.width * (1 - proportions.bowlingCreaseX) - ball.radius) ball.isFinished = true;
             }
             
-            // --- Drawing ---
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawPitch();
-            drawSwingArrow();
+            redrawFullScene();
             updateLabels();
-
-            if (bounceMarker) {
-                ctx.beginPath();
-                ctx.arc(bounceMarker.x, bounceMarker.y, 5, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(0,0,0,0.2)';
-                ctx.fill();
-            }
-
-            // Draw actual trajectory
-            ctx.beginPath();
-            ctx.moveTo(trajectoryPath[0].x, trajectoryPath[0].y);
-            for (let i = 1; i < trajectoryPath.length; i++) {
-                 ctx.lineTo(trajectoryPath[i].x, trajectoryPath[i].y);
-            }
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
-            ctx.lineWidth = 3;
-            ctx.stroke();
-
-            // Draw expected trajectory after bounce if finished (based on pre-spin velocity)
-            if (ball.isFinished && bounceMarker) {
-                const startX = bounceMarker.x;
-                const startY = bounceMarker.y;
-                
-                // Use the pre-bounce velocity for direction
-                const preBounceSpeed = Math.sqrt(ball.preBounceDx * ball.preBounceDx + ball.preBounceDy * ball.preBounceDy);
-                const dirX = ball.preBounceDx / preBounceSpeed;
-                const dirY = ball.preBounceDy / preBounceSpeed;
-
-                const projectionLength = canvas.width * 0.4; // How far to draw the line
-                const projectedX = startX + dirX * projectionLength;
-                const projectedY = startY + dirY * projectionLength;
-
-                ctx.beginPath();
-                ctx.moveTo(startX, startY); // Start from bounce point
-                ctx.lineTo(projectedX, projectedY);
-                ctx.strokeStyle = 'rgba(255, 255, 0, 0.8)'; // Yellow dashed line
-                ctx.lineWidth = 2;
-                ctx.setLineDash([4, 8]);
-                ctx.stroke();
-                ctx.setLineDash([]);
-            }
-
-
-            // Draw deviation line
-            const finalX = trajectoryPath[trajectoryPath.length-1].x;
-            const finalY = trajectoryPath[trajectoryPath.length-1].y;
-            ctx.beginPath();
-            ctx.moveTo(finalX, finalY);
-            ctx.lineTo(finalX, canvas.height / 2);
-            ctx.strokeStyle = 'rgba(236, 72, 153, 0.9)';
-            ctx.lineWidth = 2;
-            ctx.setLineDash([3, 5]);
-            ctx.stroke();
-            ctx.setLineDash([]);
             
-            drawBall(ball.x, ball.y, ball.radius);
-            
-            // Keep the animation loop going to render the final state
             animationFrameId = requestAnimationFrame(animate);
         }
 
-        // Event Listeners
+        stanceButton.addEventListener('click', () => {
+            isRHB = !isRHB;
+            stanceButton.textContent = isRHB ? 'Stance: RHB' : 'Stance: LHB';
+            redrawFullScene(); // Redraw immediately to show change
+        });
+
+        approachButton.addEventListener('click', () => {
+            bowlingApproach = bowlingApproach === 'over' ? 'around' : 'over';
+            approachButton.textContent = bowlingApproach === 'over' ? 'Over Wicket' : 'Around Wicket';
+             // The change will take effect on the next re-bowl
+        });
+
         window.addEventListener('resize', resizeCanvas);
         resetButton.addEventListener('click', resetAnimation);
         [speedSlider, swingSlider, spinSlider].forEach(slider => {
-            slider.addEventListener('input', () => {
-                if(ball.isFinished) resetAnimation();
-            });
+            slider.addEventListener('input', () => { if(ball.isFinished) resetAnimation(); });
         });
 
-        // Initial setup
         resizeCanvas();
-
     </script>
 </body>
 </html>
-
 
