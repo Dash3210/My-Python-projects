@@ -102,7 +102,7 @@
         // State variables
         let isRHB = true;
         let bowlingApproach = 'over'; // 'over' or 'around'
-        let batState = { swinging: false, angle: 0, maxAngle: Math.PI / 2.5, rotationSpeed: 0.1 };
+        let batState = { swinging: false, angle: 0, maxAngle: Math.PI / 2.5, rotationSpeed: 0.08, backliftAngle: -Math.PI / 6 };
 
         const proportions = {
             bowlingCreaseX: 0.08,
@@ -163,25 +163,32 @@
 
         function drawBat() {
             const poppingCreaseX = canvas.width * (1 - proportions.poppingCreaseX);
-            const batWidth = 12;
-            const batHeight = 60;
+            const batBladeHeight = 60;
+            const batBladeWidth = 14;
+            const handleHeight = 40;
+            const handleWidth = 6;
             
-            const yOffset = isRHB ? - (canvas.height * proportions.stumpSpacing * 2.5) : (canvas.height * proportions.stumpSpacing * 2.5);
+            const yOffset = isRHB ? - (canvas.height * proportions.stumpSpacing * 4) : (canvas.height * proportions.stumpSpacing * 4);
             const pivotX = poppingCreaseX;
             const pivotY = canvas.height / 2 + yOffset;
 
             ctx.save();
             ctx.translate(pivotX, pivotY);
-            ctx.rotate(isRHB ? -batState.angle : batState.angle);
-            
-            // Draw relative to the pivot
-            ctx.fillStyle = '#d2b48c'; // Light wood color
-            ctx.strokeStyle = '#8b4513'; // Darker wood for outline
+
+            let currentAngle = batState.backliftAngle + batState.angle;
+            ctx.rotate(isRHB ? currentAngle : -currentAngle);
+
+            const direction = isRHB ? 1 : -1;
+
+            ctx.fillStyle = '#2d2d2d';
+            ctx.fillRect(-handleWidth / 2, 0, handleWidth, handleHeight * direction);
+
+            ctx.fillStyle = '#d2b48c';
+            ctx.strokeStyle = '#8b4513';
             ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.rect(0, -batHeight / 2, batWidth, batHeight);
-            ctx.fill();
-            ctx.stroke();
+            const bladeStartX = -batBladeWidth / 2;
+            ctx.fillRect(bladeStartX, handleHeight * direction, batBladeWidth, batBladeHeight * direction);
+            ctx.strokeRect(bladeStartX, handleHeight * direction, batBladeWidth, batBladeHeight * direction);
             
             ctx.restore();
         }
@@ -207,7 +214,7 @@
             };
 
             batState.swinging = false;
-            batState.angle = 0;
+            batState.angle = 0; // Reset swing angle, backlift is constant
             trajectoryPath = [{x: ball.x - 10, y: ball.y}];
             seamAngle = 0;
             bounceMarker = null;
